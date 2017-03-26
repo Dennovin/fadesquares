@@ -1,21 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<screensaver name="fadesquares" _label="FadeSquares">
+<screensaver name="popsquares" _label="FadeSquares">
 
   <command arg="-root"/>
 
   <number id="delay" type="slider" arg="-delay %"
-          _label="Frame rate" _low-label="Low" _high-label="High"
+          _label="Frame Rate" _low-label="Low" _high-label="High"
           low="0" high="100000" default="25000"
           convert="invert"/>
 
+  <number id="subdivisions" type="slider" arg="-subdivisions %"
+          _label="Square Size" _low-label="Small" _high-label="Large"
+          low="1" high="64" default="9"
+          convert="invert"/>
+
   <number id="num-squares" type="slider" arg="-num-squares %"
-          _label="Number of Squares" _low-label="Low" _high-label="High"
+          _label="Square Density" _low-label="Low" _high-label="High"
           low="1" high="1000" default="36"/>
 
-  <number id="subdivision" type="spinbutton" arg="-subdivision %"
-          _label="Squares (Vertical)"
-          low="1" high="64" default="9"/>
+  <number id="duration" type="slider" arg="-duration %"
+          _label="Square Duration" _low-label="Low" _high-label="High"
+          low="20" high="300" default="75"/>
+
+  <number id="spacing" type="slider" arg="-spacing %"
+          _label="Spacing" _low-label="Low" _high-label="High"
+          low="0" high="10" default="1"/>
+
+  <number id="colorspeed" type="slider" arg="-colorspeed %"
+          _label="Color Change Speed" _low-label="Low" _high-label="High"
+          low="1" high="10" default="2"
+          convert="invert"/>
+
   <_description>
 Squares fading in and out, rotating through colors.
   </_description>

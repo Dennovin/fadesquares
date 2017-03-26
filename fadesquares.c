@@ -1,6 +1,7 @@
 #include "screenhack.h"
 #include "colors.h"
 #include <math.h>
+#include <float.h>
 
 typedef struct _square {
   int x, y, h, s, v;
@@ -14,8 +15,8 @@ struct state {
   XColor bg;
 
   square *squares;
-  int subdivisions, delay, nsquares;
-  int h, s;
+  int subdivisions, delay, duration, colorspeed, nsquares, spacing;
+  int h, cc;
   int size, xsq, ysq;
   XWindowAttributes xgwa;
   GC gc;
@@ -51,12 +52,13 @@ static void
 randomize_square (square *s, void *closure)
 {
   int i, count;
+  float r;
   struct state *st = (struct state *) closure;
 
   s->time = 0;
-  s->duration = floor(50 * sin(((random() % (2<<15)) * M_PI / (2<<17)) + (3 * M_PI / 8)));
+  r = ((float)(random() % (2<<8)) / (2<<8)) * M_PI / 2 - M_PI / 4;
+  s->duration = floor(st->duration * cos(r));
   s->h = st->h;
-  s->s = st->s;
 
   do {
     s->x = random() % st->xsq;
@@ -81,8 +83,11 @@ fadesquares_init (Display *dpy, Window window)
   st->dpy = dpy;
   st->window = window;
   st->delay = get_integer_resource (st->dpy, "delay", "Integer");
+  st->duration = get_integer_resource (st->dpy, "duration", "Integer");
+  st->colorspeed = get_integer_resource (st->dpy, "colorspeed", "Integer");
   st->nsquares = get_integer_resource(st->dpy, "numSquares", "Integer");
   st->subdivisions = get_integer_resource(st->dpy, "subdivisions", "Integer");
+  st->spacing = get_integer_resource(st->dpy, "spacing", "Integer");
 
   st->squares = (square *) calloc (st->nsquares, sizeof(square));
 
@@ -91,7 +96,7 @@ fadesquares_init (Display *dpy, Window window)
   st->bg.red = st->bg.green = st->bg.blue = 0;
 
   st->h = random() % 360;
-  st->s = (random() % (2 << 15)) / (2 << 15);
+  st->cc = 0;
 
   gcv.background = st->bg.pixel;
   st->gc = XCreateGC (st->dpy, st->window, GCForeground|GCBackground, &gcv);
@@ -121,13 +126,14 @@ fadesquares_draw (Display *dpy, Window window, void *closure)
   for (k = 0; k < st->nsquares; k++) {
     square *s = (square *) &st->squares[k];
     v = sin(M_PI * s->time / s->duration);
+
     hsv_to_rgb(s->h, 1.0, v, &c.red, &c.green, &c.blue);
     XAllocColor (st->dpy, st->xgwa.colormap, &c);
     XSetForeground (st->dpy, st->gc, c.pixel);
     XFillRectangle (st->dpy, st->b, st->gc,
-                    (s->x * st->size + 2),
-                    (s->y * st->size + 2),
-                    st->size - 4, st->size - 4);
+                    (s->x * st->size + st->spacing),
+                    (s->y * st->size + st->spacing),
+                    st->size - st->spacing * 2, st->size - st->spacing * 2);
     s->time++;
 
     if (s->time >= s->duration) {
@@ -135,8 +141,10 @@ fadesquares_draw (Display *dpy, Window window, void *closure)
     }
   }
 
-  st->h = (st->h + 1) % (2 << 15);
-  st->s = (st->s + 2) % (2 << 15);
+  if (++st->cc > st->colorspeed) {
+    st->h = (st->h + 1) % (2 << 15);
+    st->cc = 0;
+  }
 
   XCopyArea (st->dpy, st->b, st->window, st->gc, 0, 0,
              st->xgwa.width, st->xgwa.height, 0, 0);
@@ -169,14 +177,20 @@ fadesquares_reshape (Display *dpy, Window window, void *closure,
 
 static const char *fadesquares_defaults [] = {
   "*delay: 25000",
+  "*duration: 100",
+  "*colorspeed: 3",
   "*numSquares: 36",
   "*subdivisions: 9",
+  "*spacing: 2",
   0
 };
 
 static XrmOptionDescRec fadesquares_options [] = {
   { "-delay",     ".delay", XrmoptionSepArg, 0 },
+  { "-duration",  ".duration", XrmoptionSepArg, 0 },
+  { "-colorspeed", ".colorspeed", XrmoptionSepArg, 0 },
   { "-num-squares", ".numSquares", XrmoptionSepArg, 0 },
+  { "-spacing", ".spacing", XrmoptionSepArg, 0 },
   { "-subdivisions", ".subdivisions", XrmoptionSepArg, 0 },
   { 0, 0, 0, 0 }
 };

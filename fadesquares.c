@@ -75,7 +75,6 @@ static void *
 fadesquares_init (Display *dpy, Window window)
 {
   struct state *st = (struct state *) calloc (1, sizeof(*st));
-  XColor fg;
   XGCValues gcv;
   int i;
 
@@ -89,15 +88,11 @@ fadesquares_init (Display *dpy, Window window)
 
   XGetWindowAttributes (st->dpy, st->window, &st->xgwa);
 
-  fg.pixel = get_pixel_resource (st->dpy, st->xgwa.colormap, "foreground", "Foreground");
-  st->bg.pixel = get_pixel_resource (st->dpy, st->xgwa.colormap, "background", "Background");
-  XQueryColor (st->dpy, st->xgwa.colormap, &fg);
-  XQueryColor (st->dpy, st->xgwa.colormap, &st->bg);
+  st->bg.red = st->bg.green = st->bg.blue = 0;
 
   st->h = random() % 360;
   st->s = (random() % (2 << 15)) / (2 << 15);
 
-  gcv.foreground = fg.pixel;
   gcv.background = st->bg.pixel;
   st->gc = XCreateGC (st->dpy, st->window, GCForeground|GCBackground, &gcv);
 

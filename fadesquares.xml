@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<screensaver name="popsquares" _label="FadeSquares">
+<screensaver name="fadesquares" _label="FadeSquares">
 
   <command arg="-root"/>
 
